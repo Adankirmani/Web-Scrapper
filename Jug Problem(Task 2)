@@ -1,0 +1,53 @@
+from collections import deque
+
+def water_jug_problem(jug1_cap, jug2_cap, target):
+    # State: (amount_in_jug1, amount_in_jug2)
+    start_state = (0, 0)
+    visited = set()
+    queue = deque([(start_state, [])]) # (current_state, path_taken)
+
+    while queue:
+        (j1, j2), path = queue.popleft()
+
+        if (j1, j2) in visited:
+            continue
+        visited.add((j1, j2))
+
+        # Update path with current state
+        current_path = path + [(j1, j2)]
+
+        # Goal Check: Exactly 'target' gallons in the 4-gallon jug
+        if j1 == target:
+            return current_path
+
+        # Define possible operations (Production Rules)
+        rules = [
+            (jug1_cap, j2),           # Fill Jug 1
+            (j1, jug2_cap),           # Fill Jug 2
+            (0, j2),                  # Empty Jug 1
+            (j1, 0),                  # Empty Jug 2
+            # Pour Jug 2 -> Jug 1
+            (min(j1 + j2, jug1_cap), max(0, j2 - (jug1_cap - j1))),
+            # Pour Jug 1 -> Jug 2
+            (max(0, j1 - (jug2_cap - j2)), min(j1 + j2, jug2_cap))
+        ]
+
+        for state in rules:
+            if state not in visited:
+                queue.append((state, current_path))
+
+    return None
+
+# Parameters from your image
+j1_capacity = 4
+j2_capacity = 3
+goal = 2
+
+steps = water_jug_problem(j1_capacity, j2_capacity, goal)
+
+if steps:
+    print(f"Steps to reach {goal} gallons in the {j1_capacity}L jug:")
+    for i, step in enumerate(steps):
+        print(f"Step {i}: Jug1={step[0]}, Jug2={step[1]}")
+else:
+    print("No solution found.")
