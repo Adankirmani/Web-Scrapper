@@ -1,0 +1,49 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+from urllib.parse import urlparse
+
+def scrape_to_csv(url):
+    try:
+        # 1. Send a request to the website
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status() # Check for errors
+
+        # 2. Parse the HTML content
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # 3. Extract Data
+        title = soup.title.string if soup.title else "No Title"
+        
+        # Get all links
+        links = [a.get('href') for a in soup.find_all('a', href=True)]
+        
+        # Get all paragraph text
+        paragraphs = [p.get_text().strip() for p in soup.find_all('p')]
+        
+        # 4. Prepare data for CSV
+        domain = urlparse(url).netloc
+        filename = f"{domain}_data.csv"
+
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Data Type', 'Content'])
+            writer.writerow(['URL', url])
+            writer.writerow(['Title', title])
+            
+            for link in links:
+                writer.writerow(['Link', link])
+            
+            for text in paragraphs:
+                if text: # Only write if there's actual text
+                    writer.writerow(['Text Content', text])
+
+        print(f"Successfully scraped! Data saved to {filename}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# --- Execution ---
+user_url = input("Enter the URL (include https://): ")
+scrape_to_csv(user_url)
